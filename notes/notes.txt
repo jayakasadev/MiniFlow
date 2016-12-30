@@ -276,4 +276,63 @@ ascent
 You need to use backpropagation or reverse-mode differentiation to determine the effect a parameter has on the cost
     this is just a clever application of the chain rule
 
-calculate the derivative of the cost with respect
+calculate the derivative of the cost with respect to each parameter in the network
+the gradient is a vector of all these derivates
+
+Neural Networks are a composition of functions, so computing the derivative of the cost function is not as
+straightforward
+
+df/dx = dg/dx * df/dg
+In order to know the effect x has on f, we first need to know the effect x has on g, and then the effect g has on f.
+
+​∂cost​​ / ∂l1​ ​= ​​(∂s1 / ​∂l1) * (​​∂cost​​ / ​​​∂s1)
+
+We can unwrap ​∂cost​​ / ∂s1​​ further:
+
+​​∂cost​​ / ​∂s1 = ​​​(∂l2 / ∂s1) * (​​∂cost​​ * ​​​∂l2)
+
+Finally:
+
+​​∂cost​​ / ​∂l1 = ​​(∂s1 / ​∂l1) * (​​​​​∂l2 / ∂s1) * (​​∂cost​​ * ​​​∂l2)
+
+
+Need to calculate:
+    ​a --> ∂s1​​ / ∂l1​​
+    ​​​b --> ∂l2​​ / ∂s1
+    ​​c --> ∂cost​​ / ​∂l2
+
+    backprop makes computing these values convenient
+
+During backprop, the derivatives of nodes are computed back to front
+    c is calculated first
+    b is second
+    a is last
+so, if you can compute a, then you can assume b and c are already calculated
+
+this method sums the derivative (it's a normal derivative when there;s only one variable) with respect to
+the only input over all the output layers
+
+The Code in Sigmoid class' backward method:
+    (∂sigmoid​​​ / ​∂x) * (∂cost​​ / ∂sigmoid​​)
+    (∂sigmoid​​​ / ​∂x) = sigmoid * (1 - sigmoid)
+    (∂cost​​ / ∂sigmoid​​) = grad_cost
+
+
+                                                    Stochastic Gradient Descent
+
+version of Gradient Descent where on each forward pass a batch of data is randomly sampled from total dataset
+So far we used BGD
+    entire dataset would be fed into the neural network on each forward pass
+
+SGD is an approximation of Gradient Descent, the more batches processed by the neural network, the better the
+approximation.
+
+SGD steps:
+    1. Randomly sample a batch of data from the total datasets
+    2. Running the netword forward and backward to calculate the gradient
+    3. Apply the gradient descent update
+    4. Repeat steps 1 - 3 until convergence or the loop is stopped by another mechanism (# of iterations)
+
+If all goes well, the network's loss should generally trend downwards, indicating more useful weights and biases over
+time.
+

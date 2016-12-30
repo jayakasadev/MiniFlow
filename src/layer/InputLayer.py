@@ -2,16 +2,14 @@ from .Layer import Layer
 
 class Input(Layer):
     """
-    While it may be strange to consider an input a layer when
-    an input is only an individual node in a layer, for the sake
-    of simpler code we'll still use Layer as the base class.
-
-    Think of Input as collating many individual input nodes into
-    a Layer.
+    A generic input into the network.
     """
     def __init__(self):
-        # An Input layer has no inbound layers,
-        # so no need to pass anything to the Layer instantiator
+        # The base class constructor has to run to set all
+        # the properties here.
+        #
+        # The most important property on an Input is value.
+        # self.value is set during `topological_sort` later.
         Layer.__init__(self)
 
     def forward(self):
@@ -19,8 +17,12 @@ class Input(Layer):
         pass
 
     def backward(self):
-        # An Input Layer has no inputs so we refer to ourself
-        # for the gradient
+        # An Input layer has no inputs so the gradient (derivative)
+        # is zero.
+        # The key, `self`, is reference to this object.
         self.gradients = {self: 0}
-        for n in self.outbound_Layers:
-            self.gradients[self] += n.gradients[self]
+        # Weights and bias may be inputs, so you need to sum
+        # the gradient from output gradients.
+        for n in self.outbound_layers:
+            grad_cost = n.gradients[self]
+            self.gradients[self] += grad_cost * 1

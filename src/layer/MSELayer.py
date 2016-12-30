@@ -1,7 +1,6 @@
 from .Layer import Layer
 import numpy as np
 
-# mean squared error
 class MSE(Layer):
     def __init__(self, y, a):
         """
@@ -24,6 +23,20 @@ class MSE(Layer):
         #
         # Making both arrays (3,1) insures the result is (3,1) and does
         # an elementwise subtraction as expected.
-        y = self.inbound_layers[0].value
-        a = self.inbound_layers[1].value
-        self.value = np.mean(np.square(y-a))
+        y = self.inbound_layers[0].value.reshape(-1, 1)
+        a = self.inbound_layers[1].value.reshape(-1, 1)
+
+        self.m = self.inbound_layers[0].value.shape[0]
+        # Save the computed output for backward.
+        self.diff = y - a
+        self.value = np.mean(self.diff**2)
+
+    def backward(self):
+        """
+        Calculates the gradient of the cost.
+
+        This is the final layer of the network so outbound layers
+        are not a concern.
+        """
+        self.gradients[self.inbound_layers[0]] = (2 / self.m) * self.diff
+        self.gradients[self.inbound_layers[1]] = (-2 / self.m) * self.diff
