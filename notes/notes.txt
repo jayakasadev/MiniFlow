@@ -1,0 +1,279 @@
+This code is from the Udacity Self Driving Car Program's MiniFlow lab
+
+The goal of the lab is to demystify two concepts at the heart of neural networks: backpropagation and differentiable
+graphs
+
+this lab is practice before getting started with TensorFlow
+
+backpropagation is the process by which neural networks update the weights of the network over time
+
+differentiable graphs are graphs where the nodes are differentuable functions
+they are useful as visual aids for understanding and calculating complicated derivatives
+this the the fundamental abstraction of TensorFlow which is a framework for creating differentiable graphs
+
+
+                                                Neural Network
+
+A neural network is a graph of mathematical functions
+the graph consists of nodes or neurons and edges or links
+
+nodes in each layer (except for nodes in the input layer) perform mathematical functions using inputs from nodes in the
+previous layer
+    EX:
+        f(x, y) = x + y where x and y are the input values from nodes in the previous layer
+
+each node creates an output value which may be passed to nodes in the next layer
+the output value from the output layer does not get passed to a future layer because it is the last layer
+
+the layers between the input and the output layer are called hidden layers
+
+by propagating values from the input layer through all the mathematical functions represented by each node, the network
+outputs a value
+       this process is called forward pass
+
+the nodes and edges create a graph structure
+there are generally 2 steps to create neural networks
+    1. Define the graph of nodes and edges
+    2. propagate values through the graph
+
+                                                MiniFlow
+
+Works like a Neural Network
+Define nodes and edges of your network with one method and then propagate values through the graph with another method
+
+                                                Neuron Class
+The Neuron Class will act as the base class for all other Node classes
+
+Each node might receive input from multiple other nodes
+Each node creates a single output, which will likely be passed to other nodes
+
+Contains 2 lists
+    store references to the inbound nodes
+    store references to the outbound nodes
+
+Each node will eventually calculate a value that represents its output
+
+Each node will need to be able to pass values forwards and perform backward propagation
+    Contains 2 placeholder methods for each
+
+Defines the base set of properties that every node holds
+Only specialized subclasses of Neuron will end up in the graph
+
+                                                Input Class
+subclass of Neuron
+
+Does not actually calculate anything
+Just holds a value
+    data feature
+    model parameter
+        weight
+        bias
+
+can set value explicitly or with forward()
+    this value is then fed through the rest of the neural network
+
+
+                                                Add Class
+
+subclass of Neuron
+performs the add function
+takes 2 inbound neurons and adds their values together
+
+                                                Original Design: MiniFlow
+
+Has two methods to held define and run values through the graph
+    topographical_sort()
+    forward_pass()
+
+Topographical Sort:
+    In order to define the network, we need to define the order of operations of the neurons
+    Given that the input to somf neuron depends on the output of others,  we will need to flatten the graph in such a
+    way where all the input dependencies for each node are resolved before trying to run its calculation
+
+    topographical_sort()
+        uses the Khan's Algorithm
+        returns a sorted list of neurons in which all of the calculations can run in series
+        takes a feed_dict, which is how we initially set a value for an Input Neuron
+        feed_dict
+            python dictionary DS
+
+                                                Modified Design:
+
+Util
+    forwardPass
+        ForwardPass
+            forward_pass()
+    sort
+        TopographicalSort
+            topographical_sort()
+
+The miniflow.py file has been completely removed
+
+
+                                                Learning and Loss
+
+Neural Networks can improve the accuracy of their outputs over time
+
+                                                Linear Function
+
+A simple artificial neuron depends on 3 components:
+    input --> x
+    weight --> w
+    bias --> b
+
+output --> o = b + sum(x_i*w_i)
+    weighted sum of the inputs plus the bias
+
+By varying the weights, we can vary the amount of influence any given input has on the output
+learning aspect of neural networks takes place during a process called backpropagation
+
+During backpropagation, the network modifies the weights to improce the network's output accuracy
+
+                                                Neurons to Layers
+
+In the real world you'll likely have hundreds or thousands of neurons in each layer of your network.
+In those cases, the current technique of instantiating each neuron in the graph (and matching weights) will quickly
+become painful.
+
+It is also unnecessary to think about each neuron in a graph individually when every neuron in each layer acts the same
+(this does not have to be true, but this is true for the majority of neural networks).
+
+Think about layers in a neural network, instead of individual neurons
+
+New Base Class --> Layer
+    replaces Neuron
+
+                                                Layer Class
+
+has an output list and accents another layer as an input
+
+iterates through the inbound layer's output and produces its own list of outputs
+
+Layer class has the same number of inputs and outputs
+    generally, the number of inputs and outputs vary by layer implementation
+
+                                                Output Function Linearized
+
+Z = X*W +b
+
+                                                Sigmoid Function
+
+sigmoid(x) = 1 / (1 + e^(-x))
+
+Perceptron:
+    original design for an artificial neuron
+    exhibits binary output behavior
+    compare a weighted input to a threshold
+    when weighted input exceeds the threshold, the perceptron is activated and outputs 1, else 0
+
+    modeled by a step function that is discontinuous at x = 0 and non-differentiable
+
+Activation --> idea of a binary output
+   makes sense for classification problems like classifying handwritten numbers or letters
+
+Sigmoid function replaces the discontinuous thresholding function with an S-curve that mimics the activation behavior
+of a perceptron while maintaining continuity and thus differentiability
+
+has a very simple derivative that looks remarkably similar to the sigmoid itself
+
+    sigmoid'(x) = sigmoid(x) * (1 - sigmoid(x))
+
+this function makes decisions
+when given weighted features from some data, it indicates whether or not the features contribute to a classification
+wrks well following a linear layer
+with randon weights and bias, the sigmoid layer's output is also random
+    this is fixed with backprop and gradient descent
+
+                                                   Cost Function
+
+loss = cost
+
+calculate the cost using the mean squared error (MSE)
+    Cost(weights, bias) = (1 / m) * sum((y(x) - a)^2)
+        m = total number of samples in training set
+        a = calculated output
+        y(x) = expected output
+
+collection of weights is all the weight matrices flattened into vectors and concatenated to one big vector
+    the same applies to biases except they're already vectors so there's no need to flatten them prior to the
+    concatenation
+
+    nice way to abstract all the weights and biases used in the neural network and makes some things easier to write
+
+    # 2 by 2 matrices
+    w1  = np.array([[1, 2], [3, 4]])
+    w2  = np.array([[5, 6], [7, 8]])
+
+    # flatten
+    w1_flat = np.reshape(w1, -1)
+    w2_flat = np.reshape(w2, -1)
+
+    w = np.concatenate((w1_flat, w2_flat))
+    # array([1, 2, 3, 4, 5, 6, 7, 8])
+
+
+cost, C, depends on the difference between the correct output, y(x), and the network's output, a.
+cost = 0 iff y(x) = a
+
+ideal situation, and in fact the learning process revolves around minimizing the cost as much as possible
+
+
+                                                    BackPropagation
+
+process by which the network runs error value backwards
+
+during this process, the network calculates the way in which the weights need to change (called the gradient) to
+reduce overall error of the network
+changing the weights usually occurs through gradient descent
+
+
+                                                    Gradient Descent
+
+The goal of this process is to minimize the cost of the network to a global minimum, but sometimes you may get a local
+minima
+
+this function will iteratively progress from a random point (based on your randomly initialized weights and bias) and
+progress to minimizing the cost function as much as it can
+
+works by first calculating the slope of the plane at the current point, which includes calculating the partial
+derivatives of the loss with respect to all of the parameters
+    this is where the derivative of your cost function comes into play and it is called the gradient
+it uses the gradient to modify the weights such that the next forward pass through the network moves the output lower
+in the hyperplane
+
+Over time, it's possible to find the bottom of the valley with many small movements.
+
+While gradient descent works remarkably well, the technique isn't guaranteed to find the absolute minimum difference
+between the network's output and the known output.
+    It may get stuck in a local minima.
+
+the gradient actually points uphill, in the direction of steepest ascent
+But if we put a - sign at the front this value, we get the direction of steepest descent, which is what we want
+
+Make sure your learning rate is not too large
+    Too large --> overshoot and start going uphill
+    Too Small --> take forever to get to the target
+
+Choosing a learning rate:
+    more of a guessing game than anything else
+    empirically values in the range 0.1 to 0.0001 work well
+    The range 0.001 to 0.0001 is popular, as 0.1 and 0.01 are sometimes too large
+
+Formula:
+    x = x - learning_rate * gradient_of_x
+
+    note how the gradient is negated by multiplying it with the negative value of the learning rate
+
+
+                                                    Gradient Descent and Backpropagation
+
+In order to figure out how we should alter a parameter to minimize the cost, we must first find out what effect that
+parameter has on the cost.
+
+gradient takes into account the effect each parameter has on the cost, so that's how we find the direction of steepest
+ascent
+
+You need to use backpropagation or reverse-mode differentiation to determine the effect a parameter has on the cost
+    this is just a clever application of the chain rule
+
+calculate the derivative of the cost with respect
