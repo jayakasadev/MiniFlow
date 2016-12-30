@@ -24,5 +24,4 @@ class Input(Layer):
         # Weights and bias may be inputs, so you need to sum
         # the gradient from output gradients.
         for n in self.outbound_layers:
-            grad_cost = n.gradients[self]
-            self.gradients[self] += grad_cost * 1
+            self.gradients[self] += n.gradients[self]

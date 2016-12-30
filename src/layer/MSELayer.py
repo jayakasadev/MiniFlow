@@ -34,9 +34,6 @@ class MSE(Layer):
     def backward(self):
         """
         Calculates the gradient of the cost.
-
-        This is the final layer of the network so outbound layers
-        are not a concern.
         """
         self.gradients[self.inbound_layers[0]] = (2 / self.m) * self.diff
         self.gradients[self.inbound_layers[1]] = (-2 / self.m) * self.diff
